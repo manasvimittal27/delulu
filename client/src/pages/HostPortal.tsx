@@ -35,14 +35,14 @@ export default function HostPortal() {
   }, [host])
 
   if (host === undefined) {
-    return <div className="app-shell flex items-center justify-center min-h-screen"><p className="text-muted text-sm">Loading…</p></div>
+    return <div className="app-shell status-screen"><p className="text-muted text-sm">Loading…</p></div>
   }
 
   if (!host) return <ApplyForm onApplied={(h) => setHost(h)} />
 
   if (host.status === 'pending') {
     return (
-      <div className="app-shell flex flex-col justify-center items-center px-6 min-h-screen text-center">
+      <div className="app-shell status-screen text-center">
         <p className="text-3xl mb-4">⏳</p>
         <h1 className="font-display text-xl font-semibold mb-2">Application under review</h1>
         <p className="text-sm text-muted">We'll be in touch once our team reviews your host application.</p>
@@ -52,14 +52,14 @@ export default function HostPortal() {
 
   if (host.status === 'rejected') {
     return (
-      <div className="app-shell flex flex-col justify-center items-center px-6 min-h-screen text-center">
+      <div className="app-shell status-screen text-center">
         <p className="text-sm text-muted">Your host application wasn't approved this time.</p>
       </div>
     )
   }
 
   return (
-    <div className="app-shell px-6 pt-12 pb-28 min-h-screen">
+    <div className="app-shell page-detail px-6 pt-12 pb-28 min-h-screen">
       <h1 className="font-display text-2xl font-semibold mb-1">Host dashboard</h1>
       <p className="text-sm text-muted mb-6">{host.name}</p>
 
@@ -130,7 +130,7 @@ function ApplyForm({ onApplied }: { onApplied: (h: Host) => void }) {
   }
 
   return (
-    <div className="app-shell px-6 pt-12 pb-10 min-h-screen">
+    <div className="app-shell page-detail px-6 pt-12 pb-10 min-h-screen">
       <h1 className="font-display text-2xl font-semibold mb-1">Become a host</h1>
       <p className="text-sm text-muted mb-6">Run curated experiences on Delulu.</p>
       <div className="space-y-3">
@@ -201,7 +201,7 @@ function NewEventForm({ onClose, onCreated }: { onClose: () => void; onCreated: 
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50">
-      <div className="w-full max-w-[480px] rounded-t-3xl bg-surface border-t border-border p-6 max-h-[85vh] overflow-y-auto">
+      <div className="modal-sheet rounded-t-3xl bg-surface border-t border-border p-6 max-h-[85vh] overflow-y-auto">
         <h2 className="font-display text-lg font-semibold mb-4">New event</h2>
         <div className="space-y-3">
           {coverImageUrl ? (

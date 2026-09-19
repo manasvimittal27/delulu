@@ -57,7 +57,7 @@ export default function EventDetail() {
 
   if (!event) {
     return (
-      <div className="app-shell flex items-center justify-center min-h-screen">
+      <div className="app-shell page-detail flex items-center justify-center min-h-screen">
         <p className="text-muted text-sm">Loading…</p>
       </div>
     )
@@ -65,7 +65,7 @@ export default function EventDetail() {
 
   if (stage === 'done') {
     return (
-      <div className="app-shell flex flex-col justify-center items-center px-6 min-h-screen text-center">
+      <div className="app-shell page-detail flex flex-col justify-center items-center px-6 min-h-screen text-center">
         <p className="text-3xl mb-4">🎉</p>
         <h1 className="font-display text-xl font-semibold mb-2">You're in.</h1>
         <p className="text-sm text-muted mb-6">
@@ -79,7 +79,7 @@ export default function EventDetail() {
   }
 
   return (
-    <div className="app-shell px-6 pt-10 pb-28 min-h-screen">
+    <div className="app-shell page-detail px-6 pt-10 pb-28 min-h-screen">
       <button onClick={() => navigate('/events')} className="text-xs text-muted mb-4">← Events</button>
 
       {event.coverImageUrl ? (

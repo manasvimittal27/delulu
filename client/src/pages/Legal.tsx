@@ -58,7 +58,7 @@ export default function Legal() {
 
   if (!content) {
     return (
-      <div className="app-shell px-6 pt-14 pb-10 min-h-screen">
+      <div className="app-shell page-detail px-6 pt-14 pb-10 min-h-screen">
         <p className="text-sm text-muted">Page not found.</p>
         <Link href="/" className="text-sm text-lilac underline mt-4 inline-block">Back home</Link>
       </div>
@@ -66,7 +66,7 @@ export default function Legal() {
   }
 
   return (
-    <div className="app-shell px-6 pt-14 pb-10 min-h-screen">
+    <div className="app-shell page-detail px-6 pt-14 pb-10 min-h-screen">
       <Link href="/" className="text-xs text-muted mb-4 inline-block">← Back</Link>
       <h1 className="font-display text-2xl font-semibold mb-6">{content.title}</h1>
       <div className="space-y-4">

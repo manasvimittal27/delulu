@@ -37,7 +37,7 @@ export default function EmergencyContacts() {
   }
 
   return (
-    <div className="app-shell px-6 pt-12 pb-10 min-h-screen">
+    <div className="app-shell page-detail px-6 pt-12 pb-10 min-h-screen">
       <button onClick={() => navigate('/me')} className="text-xs text-muted mb-4">← Me</button>
       <h1 className="font-display text-2xl font-semibold mb-1">Emergency contacts</h1>
       <p className="text-sm text-muted mb-6">Used only if you flag "Need help" after a meetup. Never shown to other members.</p>

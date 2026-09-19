@@ -69,7 +69,7 @@ export function CafeBookingSheet({ date, onClose }: { date: string; onClose: () 
         animate={{ y: 0 }}
         exit={{ y: '100%' }}
         transition={{ type: 'spring', damping: 26, stiffness: 260 }}
-        className="w-full max-w-[480px] rounded-t-3xl bg-surface border-t border-border p-6 max-h-[85vh] overflow-y-auto"
+        className="modal-sheet rounded-t-3xl bg-surface border-t border-border p-6 max-h-[85vh] overflow-y-auto"
       >
         <div className="w-10 h-1 rounded-full bg-border mx-auto mb-4" />
 

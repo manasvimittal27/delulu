@@ -58,14 +58,14 @@ export default function AdminDashboard() {
   }, [])
 
   if (!user) {
-    return <div className="app-shell flex items-center justify-center min-h-screen"><p className="text-muted text-sm">Sign in first.</p></div>
+    return <div className="app-shell status-screen"><p className="text-muted text-sm">Sign in first.</p></div>
   }
   if (forbidden || user.role !== 'admin') {
-    return <div className="app-shell flex items-center justify-center min-h-screen"><p className="text-muted text-sm">Admins only.</p></div>
+    return <div className="app-shell status-screen"><p className="text-muted text-sm">Admins only.</p></div>
   }
 
   return (
-    <div className="app-shell px-4 pt-10 pb-16 min-h-screen">
+    <div className="app-shell admin-screen page-detail px-4 pt-10 pb-16 min-h-screen">
       <h1 className="font-display text-2xl font-semibold px-2 mb-4">Admin</h1>
       <div className="flex gap-2 overflow-x-auto px-2 mb-6 pb-1">
         {TABS.map((t) => (
