@@ -24,6 +24,7 @@ import { circleRouter } from "./routes/circle";
 import { notificationsRouter } from "./routes/notifications";
 import { hostPortalRouter } from "./routes/hostPortal";
 import { uploadsRouter, UPLOAD_DIR } from "./routes/uploads";
+import { internalRouter } from "./routes/internal";
 import { attachWebSocket } from "./ws";
 import { startMatchCron } from "./jobs/matchRunner";
 import { startReminderCron } from "./jobs/reminders";
@@ -78,6 +79,7 @@ app.use("/api/circle", circleRouter);
 app.use("/api/notifications", notificationsRouter);
 app.use("/api/host", hostPortalRouter);
 app.use("/api/uploads", uploadsRouter);
+app.use("/api/internal", internalRouter);
 
 if (isProduction) {
   const clientDist = path.resolve(__dirname, "../../client/dist");

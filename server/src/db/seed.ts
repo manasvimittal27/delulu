@@ -48,7 +48,7 @@ function pick<T>(arr: T[]): T {
   return arr[randInt(0, arr.length - 1)];
 }
 
-async function main() {
+export async function runSeed() {
   console.log("Seeding venues...");
   const venueRows = await db
     .insert(venues)
@@ -207,10 +207,14 @@ async function main() {
   }
 
   console.log(`Seed complete. Users: ${demoUserIds.length}, venues: ${venueRows.length}`);
-  await sql.end();
 }
 
-main().catch((e) => {
-  console.error(e);
-  process.exit(1);
-});
+const isCliEntry = process.argv[1] && import.meta.url === `file://${process.argv[1]}`;
+if (isCliEntry) {
+  runSeed()
+    .then(() => sql.end())
+    .catch((e) => {
+      console.error(e);
+      process.exit(1);
+    });
+}
