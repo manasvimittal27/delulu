@@ -24,4 +24,15 @@ export default defineConfig({
       '/uploads': { target: 'http://localhost:8787', changeOrigin: true },
     },
   },
+  build: {
+    // Avoid generic "index-*.js"/"index-*.css" bundle names — some ad-block
+    // lists flag them as tracker-shaped filenames and block the request.
+    rollupOptions: {
+      output: {
+        entryFileNames: 'assets/app-[hash].js',
+        chunkFileNames: 'assets/chunk-[hash].js',
+        assetFileNames: 'assets/asset-[hash][extname]',
+      },
+    },
+  },
 })
