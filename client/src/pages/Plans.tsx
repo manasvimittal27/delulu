@@ -20,6 +20,7 @@ export default function Plans() {
   const [upcoming, setUpcoming] = useState<UpcomingPlan[]>([])
   const [selectedDate, setSelectedDate] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     const days: Date[] = []
@@ -30,10 +31,9 @@ export default function Plans() {
       days.push(d)
     }
     setDates({ date: today.toISOString().slice(0, 10), days })
-    api.get<{ plans: UpcomingPlan[] }>('/plans/upcoming').catch(() => ({ plans: [] })).then((up) => {
-      setUpcoming(up.plans)
-      setLoading(false)
-    })
+    api.get<{ plans: UpcomingPlan[] }>('/plans/upcoming').then((up) => setUpcoming(up.plans)).catch((e) => {
+      setError(e instanceof Error ? e.message : 'Unable to load plans right now')
+    }).finally(() => setLoading(false))
   }, [])
 
   return (
@@ -75,8 +75,8 @@ export default function Plans() {
             ) : (
               <div className="rounded-2xl bg-surface-2 p-7 text-center">
                 <Sparkles size={22} className="mx-auto text-delulu-punch mb-3" />
-                <p className="font-semibold text-sm">No plans yet.</p>
-                <p className="text-sm text-muted mt-1">Pick a date and let the algorithm introduce you.</p>
+                <p className="font-semibold text-sm">{error ? 'Plans are unavailable right now.' : 'No plans yet.'}</p>
+                <p className="text-sm text-muted mt-1">{error ?? 'Pick a date and let the algorithm introduce you.'}</p>
               </div>
             )}
           </section>

@@ -150,7 +150,7 @@ function ApplyForm({ onApplied }: { onApplied: (h: Host) => void }) {
 function NewEventForm({ onClose, onCreated }: { onClose: () => void; onCreated: (e: HostEvent) => void }) {
   const [title, setTitle] = useState('')
   const [category, setCategory] = useState('')
-  const [city, setCity] = useState('Bengaluru')
+  const [city, setCity] = useState('Delhi NCR')
   const [area, setArea] = useState('')
   const [date, setDate] = useState('')
   const [time, setTime] = useState('18:30')
@@ -222,8 +222,8 @@ function NewEventForm({ onClose, onCreated }: { onClose: () => void; onCreated: 
           )}
           <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Title" className="input" />
           <input value={category} onChange={(e) => setCategory(e.target.value)} placeholder="Category (e.g. trivia)" className="input" />
-          <input value={city} onChange={(e) => setCity(e.target.value)} placeholder="City" className="input" />
-          <input value={area} onChange={(e) => setArea(e.target.value)} placeholder="Area" className="input" />
+          <input value={city} onChange={(e) => setCity(e.target.value)} placeholder="City (Delhi NCR)" className="input" />
+          <input value={area} onChange={(e) => setArea(e.target.value)} placeholder="Area (Delhi, Gurugram, Noida...)" className="input" />
           <input value={date} onChange={(e) => setDate(e.target.value)} type="date" className="input" />
           <input value={time} onChange={(e) => setTime(e.target.value)} type="time" className="input" />
           <input value={price} onChange={(e) => setPrice(e.target.value)} placeholder="Price (₹)" className="input" />

@@ -2,7 +2,19 @@ import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { api } from '@/lib/api'
 
-const AREAS = ['Indiranagar', 'Koramangala', 'HSR', 'Jayanagar']
+const AREAS = [
+  'Delhi · Hauz Khas',
+  'Delhi · Connaught Place',
+  'Delhi · Greater Kailash',
+  'Delhi · Saket',
+  'Gurugram · Cyber Hub',
+  'Gurugram · Sector 29',
+  'Gurugram · Golf Course Road',
+  'Noida · Sector 18',
+  'Noida · Sector 62',
+  'Faridabad · Sector 15',
+  'Ghaziabad · Indirapuram',
+]
 const WINDOWS: { id: string; label: string }[] = [
   { id: 'morning', label: 'Morning · 10:00' },
   { id: 'afternoon', label: 'Afternoon · 15:00' },

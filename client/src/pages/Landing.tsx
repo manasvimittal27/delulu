@@ -29,11 +29,17 @@ const FAQS = [
 export default function Landing() {
   const [waitlistCity, setWaitlistCity] = useState('')
   const [waitlistDone, setWaitlistDone] = useState(false)
+  const [waitlistError, setWaitlistError] = useState<string | null>(null)
 
   async function joinWaitlist() {
     if (!waitlistCity.trim()) return
-    await api.post('/waitlist', { city: waitlistCity.trim() })
-    setWaitlistDone(true)
+    setWaitlistError(null)
+    try {
+      await api.post('/waitlist', { city: waitlistCity.trim() })
+      setWaitlistDone(true)
+    } catch (e) {
+      setWaitlistError(e instanceof Error ? e.message : 'Unable to join the waitlist right now')
+    }
   }
 
   return (
@@ -138,16 +144,19 @@ export default function Landing() {
       <section className="story-section">
         <div className="waitlist-band">
           <div>
-            <p className="page-kicker text-ink/60">03 / Coming to a city near you</p>
-            <h2 className="mt-4">Not in your city <span className="editorial-serif">yet?</span></h2>
-            <p>Tell us where you are. We’ll ping you when Delulu lands nearby.</p>
+            <p className="page-kicker text-ink/60">03 / Delhi NCR and beyond</p>
+            <h2 className="mt-4">Not in Delhi NCR <span className="editorial-serif">yet?</span></h2>
+            <p>We’re starting across Delhi, Gurugram and Noida. Tell us where you are and we’ll ping you when Delulu lands nearby.</p>
           </div>
           {waitlistDone ? (
             <div className="rounded-2xl bg-ink/10 p-5 text-sm font-semibold">You’re on the list. We’ll be in touch.</div>
           ) : (
-            <div className="waitlist-form">
-              <input value={waitlistCity} onChange={(e) => setWaitlistCity(e.target.value)} placeholder="Your city" className="input" aria-label="Your city" />
-              <button onClick={joinWaitlist} className="primary-button">Join waitlist <ArrowUpRight size={16} /></button>
+            <div>
+              <div className="waitlist-form">
+                <input value={waitlistCity} onChange={(e) => setWaitlistCity(e.target.value)} placeholder="Delhi / Gurugram / Noida" className="input" aria-label="Your city" />
+                <button onClick={joinWaitlist} className="primary-button">Join waitlist <ArrowUpRight size={16} /></button>
+              </div>
+              {waitlistError && <p className="text-punch text-xs mt-3">{waitlistError}</p>}
             </div>
           )}
         </div>
@@ -174,7 +183,7 @@ export default function Landing() {
         <div><span className="font-semibold text-fg">delulu</span><span className="ml-3">show up anyway.</span></div>
         <div className="landing-footer-links">
           {['safety', 'terms', 'privacy', 'refunds', 'hosts'].map((page) => <a key={page} href={`/legal/${page}`}>{page}</a>)}
-          <span className="inline-flex items-center gap-1"><MapPin size={12} /> Bengaluru & beyond</span>
+          <span className="inline-flex items-center gap-1"><MapPin size={12} /> Delhi NCR & beyond</span>
         </div>
       </footer>
     </div>

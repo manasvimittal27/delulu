@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { db } from "../db/client";
-import { users, userTraits } from "../db/schema";
+import { users, userTraits, waitlist } from "../db/schema";
 import { eq } from "drizzle-orm";
 import { requestOtpSchema, verifyOtpSchema, profileSetupSchema } from "@delulu/shared";
 import { issueOtp, verifyOtp } from "../services/otp";
@@ -63,12 +63,13 @@ authRouter.post("/profile", requireAuth, async (req, res) => {
     return res.status(403).json({ error: "Delulu is currently 18+. Come back when you're eligible 🫶" });
   }
 
+  const user = (req as any).user;
   const city = resolveCityFromPincode(pincode);
   if (!city) {
+    await db.insert(waitlist).values({ phone: user.phone, city: `Pincode ${pincode}` });
     return res.status(200).json({ ok: false, waitlist: true });
   }
 
-  const user = (req as any).user;
   const [updated] = await db
     .update(users)
     .set({
@@ -93,12 +94,18 @@ authRouter.post("/profile", requireAuth, async (req, res) => {
   res.json({ ok: true, user: serializeSelf(updated) });
 });
 
+// The product is currently launching across Delhi NCR. We keep the canonical
+// city value broad so Delhi, Gurugram, Noida and nearby NCR areas can share
+// the same matching pool while their specific locality remains in `area`.
 const PINCODE_CITY_MAP: Record<string, string> = {
-  "560": "Bengaluru",
-  "110": "Delhi",
-  "400": "Mumbai",
-  "411": "Pune",
-  "122": "Gurgaon",
+  "110": "Delhi NCR",
+  "121": "Delhi NCR",
+  "122": "Delhi NCR",
+  "123": "Delhi NCR",
+  "124": "Delhi NCR",
+  "131": "Delhi NCR",
+  "201": "Delhi NCR",
+  "250": "Delhi NCR",
 };
 
 function resolveCityFromPincode(pincode: string): string | null {

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useLocation } from 'wouter'
-import { api } from '@/lib/api'
+import { api, ApiError } from '@/lib/api'
 
 interface Contact {
   id: string
@@ -15,10 +15,15 @@ export default function EmergencyContacts() {
   const [phone, setPhone] = useState('')
   const [error, setError] = useState<string | null>(null)
 
-  function refresh() {
-    api.get<{ contacts: Contact[] }>('/safety/emergency-contacts').then((r) => setContacts(r.contacts))
+  async function refresh() {
+    try {
+      const r = await api.get<{ contacts: Contact[] }>('/safety/emergency-contacts')
+      setContacts(r.contacts)
+    } catch (e) {
+      setError(e instanceof ApiError ? e.message : 'Unable to load emergency contacts')
+    }
   }
-  useEffect(refresh, [])
+  useEffect(() => { void refresh() }, [])
 
   async function add() {
     setError(null)
@@ -30,9 +35,9 @@ export default function EmergencyContacts() {
       await api.post('/safety/emergency-contacts', { name: name.trim(), phone })
       setName('')
       setPhone('')
-      refresh()
-    } catch {
-      setError('Something went wrong')
+      await refresh()
+    } catch (e) {
+      setError(e instanceof ApiError ? e.message : 'Unable to save emergency contact')
     }
   }
 

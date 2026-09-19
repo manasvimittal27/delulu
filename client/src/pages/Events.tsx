@@ -21,9 +21,13 @@ interface EventItem {
 
 export default function Events() {
   const [events, setEvents] = useState<EventItem[] | null>(null)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    api.get<{ events: EventItem[] }>('/events').then((r) => setEvents(r.events)).catch(() => setEvents([]))
+    api.get<{ events: EventItem[] }>('/events').then((r) => setEvents(r.events)).catch((e) => {
+      setError(e instanceof Error ? e.message : 'Unable to load events right now')
+      setEvents([])
+    })
   }, [])
 
   return (
@@ -35,7 +39,7 @@ export default function Events() {
         </header>
         <div className="grid gap-5 pb-10 sm:grid-cols-2 lg:grid-cols-3">
           {events === null && [0, 1, 2].map((i) => <div key={i} className="h-80 rounded-[24px] bg-surface-2 animate-pulse" />)}
-          {events?.length === 0 && <div className="surface-card p-10 text-center sm:col-span-2 lg:col-span-3"><PartyPopper size={24} className="mx-auto text-tangerine mb-3" /><p className="font-semibold">Nothing chaotic here yet.</p><p className="text-sm text-muted mt-1">Check another date or join the waitlist.</p></div>}
+          {events?.length === 0 && <div className="surface-card p-10 text-center sm:col-span-2 lg:col-span-3"><PartyPopper size={24} className="mx-auto text-tangerine mb-3" /><p className="font-semibold">{error ? 'Events are unavailable right now.' : 'Nothing chaotic here yet.'}</p><p className="text-sm text-muted mt-1">{error ?? 'Check another date or join the waitlist.'}</p></div>}
           {events?.map((e) => (
             <Link key={e.id} href={`/events/${e.id}`} className="surface-card group overflow-hidden no-underline transition-transform hover:-translate-y-1">
               {e.coverImageUrl ? <img src={e.coverImageUrl} alt="" className="h-52 w-full object-cover transition-transform duration-500 group-hover:scale-105" /> : <div className="h-52 w-full bg-[radial-gradient(circle_at_25%_25%,var(--delulu-lilac),transparent_44%),linear-gradient(135deg,var(--delulu-punch),var(--delulu-tangerine))]" />}
