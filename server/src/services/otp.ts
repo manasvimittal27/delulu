@@ -3,11 +3,13 @@ import { otpCodes } from "../db/schema";
 import { eq, and, gt, desc } from "drizzle-orm";
 
 const DEV_OTP = "123456";
-const isProd = process.env.NODE_ENV === "production";
 const hasProvider = Boolean(process.env.SMS_PROVIDER_API_KEY);
 
 function generateCode(): string {
-  if (!hasProvider && !isProd) return DEV_OTP;
+  // Without a real SMS provider configured, there is no way for a user to
+  // receive a random code — always fall back to the fixed dev OTP regardless
+  // of NODE_ENV, otherwise nobody can ever sign in.
+  if (!hasProvider) return DEV_OTP;
   return String(Math.floor(100000 + Math.random() * 900000));
 }
 
@@ -22,7 +24,7 @@ export async function issueOtp(phone: string) {
     console.log(`[dev-otp] ${phone} -> ${code}`);
   }
 
-  return { devOtp: !isProd ? code : undefined };
+  return { devOtp: !hasProvider ? code : undefined };
 }
 
 export async function verifyOtp(phone: string, code: string): Promise<boolean> {
