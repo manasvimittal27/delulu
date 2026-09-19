@@ -1,0 +1,91 @@
+@import "tailwindcss";
+
+:root {
+  --delulu-ink: #12101a;
+  --delulu-surface: #1c1926;
+  --delulu-surface2: #262233;
+  --delulu-lilac: #a78bfa;
+  --delulu-punch: #ff5da2;
+  --delulu-lime: #c4f542;
+  --delulu-tangerine: #ff8a3d;
+  --delulu-sky: #5cc8ff;
+  --delulu-cream: #f7f4ec;
+  --delulu-muted: #8b85a0;
+
+  --bg: var(--delulu-ink);
+  --surface: var(--delulu-surface);
+  --surface-2: var(--delulu-surface2);
+  --fg: var(--delulu-cream);
+  --muted: var(--delulu-muted);
+  --border: #322c43;
+  color-scheme: dark;
+}
+
+:root[data-theme="light"] {
+  --bg: var(--delulu-cream);
+  --surface: #ffffff;
+  --surface-2: #f1eee5;
+  --fg: var(--delulu-ink);
+  --muted: #6b6580;
+  --border: #e5e0d3;
+  color-scheme: light;
+}
+
+@theme {
+  --color-ink: var(--delulu-ink);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-lilac: var(--delulu-lilac);
+  --color-punch: var(--delulu-punch);
+  --color-lime: var(--delulu-lime);
+  --color-tangerine: var(--delulu-tangerine);
+  --color-sky: var(--delulu-sky);
+  --color-cream: var(--delulu-cream);
+  --color-muted: var(--muted);
+  --color-fg: var(--fg);
+  --color-border: var(--border);
+  --font-display: "Clash Display", "General Sans", system-ui, sans-serif;
+  --font-body: "Inter", system-ui, sans-serif;
+}
+
+* {
+  border-color: var(--border);
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-body);
+  font-variant-numeric: tabular-nums;
+  -webkit-font-smoothing: antialiased;
+}
+
+.app-shell {
+  max-width: 480px;
+  margin: 0 auto;
+  min-height: 100vh;
+  position: relative;
+  background: var(--bg);
+}
+
+@media (min-width: 768px) {
+  body {
+    background:
+      radial-gradient(circle at 15% 15%, color-mix(in srgb, var(--delulu-lilac) 22%, transparent), transparent 55%),
+      radial-gradient(circle at 85% 75%, color-mix(in srgb, var(--delulu-punch) 18%, transparent), transparent 55%),
+      var(--bg);
+  }
+  .app-shell {
+    box-shadow: 0 0 0 1px var(--border), 0 40px 80px -20px rgba(0, 0, 0, 0.5);
+    border-radius: 32px;
+    margin: 24px auto;
+    min-height: calc(100vh - 48px);
+    overflow: hidden;
+  }
+}

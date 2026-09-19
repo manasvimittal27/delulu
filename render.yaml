@@ -1,0 +1,22 @@
+databases:
+  - name: delulu-db
+    plan: free
+    databaseName: delulu
+    user: delulu
+
+services:
+  - type: web
+    name: delulu
+    runtime: node
+    plan: free
+    buildCommand: npm install && npm run build && npm run db:push -w server
+    startCommand: npm run start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: delulu-db
+          property: connectionString
+      - key: SESSION_SECRET
+        generateValue: true

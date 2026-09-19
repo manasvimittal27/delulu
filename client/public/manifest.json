@@ -1,0 +1,12 @@
+{
+  "name": "Delulu",
+  "short_name": "Delulu",
+  "description": "Be delulu. Show up anyway. Meet strangers in real life, anonymously, in small groups.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#12101A",
+  "theme_color": "#12101A",
+  "icons": [
+    { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}
