@@ -3,9 +3,11 @@ import { useLocation } from 'wouter'
 import { motion, AnimatePresence } from 'framer-motion'
 import { QUIZ_QUESTIONS, QUIZ_SECTIONS } from '@delulu/shared'
 import { api } from '@/lib/api'
+import { useAuthStore } from '@/lib/store'
 
 export default function Quiz() {
   const [, navigate] = useLocation()
+  const setUser = useAuthStore((s) => s.setUser)
   const [index, setIndex] = useState(0)
   const [showInterstitial, setShowInterstitial] = useState<string | null>(QUIZ_SECTIONS[0].interstitial)
   const [skips, setSkips] = useState(0)
@@ -16,6 +18,7 @@ export default function Quiz() {
   const [preferredGenders, setPreferredGenders] = useState<string[]>([])
   const [ageMin, setAgeMin] = useState(21)
   const [ageMax, setAgeMax] = useState(30)
+  const [finishError, setFinishError] = useState<string | null>(null)
 
   const question = QUIZ_QUESTIONS[index]
   const progress = Math.round((index / QUIZ_QUESTIONS.length) * 100)
@@ -58,9 +61,17 @@ export default function Quiz() {
 
   async function finish() {
     setSubmitting(true)
-    const res = await api.post<{ ok: boolean; vibeCard: any }>('/quiz/complete')
-    sessionStorage.setItem('delulu_vibe_card', JSON.stringify(res.vibeCard))
-    navigate('/onboarding/vibe-card')
+    setFinishError(null)
+    try {
+      const res = await api.post<{ ok: boolean; vibeCard: any }>('/quiz/complete')
+      sessionStorage.setItem('delulu_vibe_card', JSON.stringify(res.vibeCard))
+      const user = useAuthStore.getState().user
+      if (user) setUser({ ...user, onboardingStep: 'avatar' })
+      navigate('/onboarding/vibe-card')
+    } catch {
+      setFinishError("Couldn't finish that up — check your connection and try again.")
+      setSubmitting(false)
+    }
   }
 
   function toggleMulti(id: string) {
@@ -228,6 +239,14 @@ export default function Quiz() {
         </button>
       </div>
       {submitting && <p className="text-center text-sm text-muted mt-4">Cooking up your vibe card… 🍲</p>}
+      {finishError && (
+        <div className="text-center mt-4">
+          <p className="text-sm text-punch">{finishError}</p>
+          <button onClick={finish} className="text-sm text-lilac underline mt-2">
+            Try again
+          </button>
+        </div>
+      )}
     </div>
   )
 }
