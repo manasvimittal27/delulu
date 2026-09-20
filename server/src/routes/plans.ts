@@ -105,6 +105,7 @@ plansRouter.post("/cafe/book", requireAuth, requireOnboarded("done"), async (req
       groupSizePref: String(groupSizePrefRaw),
       intent: parsed.data.intent,
       groupComfort: parsed.data.groupComfort,
+      dietaryPref: parsed.data.dietaryPref,
       status: "pending_payment",
       amountPaise: CAFE_PRICE_PAISE,
     })

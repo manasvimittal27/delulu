@@ -104,6 +104,17 @@ export const userTraits = pgTable("user_traits", {
   ageRangeMin: integer("age_range_min"),
   ageRangeMax: integer("age_range_max"),
   archetypeId: text("archetype_id"),
+  // New behavioural trait model (quiz v2) — supersedes the numeric fields
+  // above for scoring purposes; those are kept only for old rows.
+  socialInitiation: integer("social_initiation").notNull().default(50),
+  groupEnergyPref: integer("group_energy_pref").notNull().default(50),
+  disagreementTolerance: integer("disagreement_tolerance").notNull().default(50),
+  spontaneity: integer("spontaneity").notNull().default(50),
+  adaptability: integer("adaptability").notNull().default(50),
+  humourStyleCategory: text("humour_style"),
+  humourEngagement: integer("humour_engagement").notNull().default(50),
+  humourEdge: text("humour_edge"),
+  airtimeStyle: text("airtime_style"),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
@@ -144,6 +155,8 @@ export const bookings = pgTable("bookings", {
   amountPaise: integer("amount_paise").notNull(),
   paymentOrderId: text("payment_order_id"),
   matchGroupId: uuid("match_group_id"),
+  dietaryPref: text("dietary_pref"),
+  fitnessLevel: text("fitness_level"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
@@ -183,12 +196,18 @@ export const pairScores = pgTable("pair_scores", {
   userBId: uuid("user_b_id").notNull().references(() => users.id),
   overall: integer("overall").notNull(),
   interests: integer("interests").notNull(),
-  personality: integer("personality").notNull(),
-  values: integer("values").notNull(),
-  lifestyle: integer("lifestyle").notNull(),
   conversation: integer("conversation").notNull(),
-  humor: integer("humor").notNull(),
-  age: integer("age").notNull(),
+  socialInitiationFit: integer("social_initiation_fit").notNull().default(0),
+  groupEnergyFit: integer("group_energy_fit").notNull().default(0),
+  humourFit: integer("humour_fit").notNull().default(0),
+  disagreementFit: integer("disagreement_fit").notNull().default(0),
+  spontaneityFit: integer("spontaneity_fit").notNull().default(0),
+  // Deprecated (quiz v1 scoring) — kept nullable for old rows.
+  personality: integer("personality"),
+  values: integer("values"),
+  lifestyle: integer("lifestyle"),
+  humor: integer("humor"),
+  age: integer("age"),
 });
 
 export const blockedPairs = pgTable("blocked_pairs", {

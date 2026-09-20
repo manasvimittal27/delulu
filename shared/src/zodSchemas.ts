@@ -41,6 +41,7 @@ export const bookCafeSlotSchema = z.object({
   groupSize: z.union([z.literal(4), z.literal(5), z.literal(6), z.literal("surprise")]),
   intent: z.enum(["friendship", "romantic", "both"]),
   groupComfort: z.enum(["mixed", "same_gender", "no_preference"]),
+  dietaryPref: z.enum(["no_preference", "vegetarian", "non_vegetarian", "vegan", "jain"]).optional(),
 });
 
 export type RequestOtpInput = z.infer<typeof requestOtpSchema>;

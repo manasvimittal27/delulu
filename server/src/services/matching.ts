@@ -18,8 +18,12 @@ import {
   auditLog,
 } from "../db/schema";
 import { eq, and, inArray, gte, sql } from "drizzle-orm";
-import { pairScore, pairScoreEvent, groupCohesion, type TraitInput } from "./scoring";
+import { pairScore, pairScoreEvent, groupCohesion, buildInterestVector, type TraitInput } from "./scoring";
 import { TIME_WINDOW_DEFAULTS, type TimeWindow } from "@delulu/shared";
+
+const MAX_DRIVERS = 2;
+const MAX_LISTENERS = 2;
+const MAX_PAIR_BONDERS = 2;
 
 const MIN_COHESION = 45;
 const CAFE_MIN = 4;
@@ -41,6 +45,7 @@ interface Candidate {
   preferredGenders: string[];
   ageRangeMin: number | null;
   ageRangeMax: number | null;
+  airtimeStyle: string | null;
 }
 
 interface PairKey {
@@ -70,15 +75,16 @@ async function loadCandidates(slotId: string): Promise<Candidate[]> {
     preferredGenders: (r.traits.preferredGenders as string[]) ?? [],
     ageRangeMin: r.traits.ageRangeMin,
     ageRangeMax: r.traits.ageRangeMax,
+    airtimeStyle: r.traits.airtimeStyle,
     traits: {
-      socialEnergy: r.traits.socialEnergy,
-      opennessToNew: r.traits.opennessToNew,
-      humorStyle: r.traits.humorStyle,
+      interestVector: buildInterestVector((r.traits.interests as Record<string, string[]>) ?? {}),
       conversationDepth: r.traits.conversationDepth,
-      planningStyle: r.traits.planningStyle,
-      valuesScore: r.traits.valuesScore,
-      lifestyleScore: r.traits.lifestyleScore,
-      interests: (r.traits.interests as Record<string, string[]>) ?? {},
+      socialInitiation: r.traits.socialInitiation,
+      groupEnergyPref: r.traits.groupEnergyPref,
+      disagreementTolerance: r.traits.disagreementTolerance,
+      spontaneity: r.traits.spontaneity,
+      humourStyle: r.traits.humourStyleCategory,
+      humourEdge: r.traits.humourEdge,
       dob: r.user.dob,
     },
   }));
@@ -102,15 +108,16 @@ async function loadEventCandidates(eventId: string): Promise<Candidate[]> {
     preferredGenders: (r.traits.preferredGenders as string[]) ?? [],
     ageRangeMin: r.traits.ageRangeMin,
     ageRangeMax: r.traits.ageRangeMax,
+    airtimeStyle: r.traits.airtimeStyle,
     traits: {
-      socialEnergy: r.traits.socialEnergy,
-      opennessToNew: r.traits.opennessToNew,
-      humorStyle: r.traits.humorStyle,
+      interestVector: buildInterestVector((r.traits.interests as Record<string, string[]>) ?? {}),
       conversationDepth: r.traits.conversationDepth,
-      planningStyle: r.traits.planningStyle,
-      valuesScore: r.traits.valuesScore,
-      lifestyleScore: r.traits.lifestyleScore,
-      interests: (r.traits.interests as Record<string, string[]>) ?? {},
+      socialInitiation: r.traits.socialInitiation,
+      groupEnergyPref: r.traits.groupEnergyPref,
+      disagreementTolerance: r.traits.disagreementTolerance,
+      spontaneity: r.traits.spontaneity,
+      humourStyle: r.traits.humourStyleCategory,
+      humourEdge: r.traits.humourEdge,
       dob: r.user.dob,
     },
   }));
@@ -219,6 +226,47 @@ function allPairsValid(members: Candidate[], blockedSet: Set<string>, recentSet:
   return true;
 }
 
+/**
+ * Airtime composition rule: at least 1 includer keeps everyone talking; too
+ * many drivers or listeners tips a table into a monologue or a stall; too
+ * many pair-bonders splits it into side conversations.
+ */
+function compositionOk(members: Candidate[], requireIncluder: boolean): boolean {
+  let drivers = 0;
+  let listeners = 0;
+  let pairBonders = 0;
+  let includers = 0;
+  for (const m of members) {
+    if (m.airtimeStyle === "driver") drivers++;
+    else if (m.airtimeStyle === "listener") listeners++;
+    else if (m.airtimeStyle === "pair_bonder") pairBonders++;
+    else if (m.airtimeStyle === "includer") includers++;
+  }
+  if (drivers > MAX_DRIVERS) return false;
+  if (listeners > MAX_LISTENERS) return false;
+  if (pairBonders > MAX_PAIR_BONDERS) return false;
+  if (requireIncluder && includers === 0) return false;
+  return true;
+}
+
+export interface GroupComposition {
+  includers: number;
+  drivers: number;
+  listeners: number;
+  pairBonders: number;
+}
+
+export function computeComposition(members: { airtimeStyle: string | null }[]): GroupComposition {
+  const c: GroupComposition = { includers: 0, drivers: 0, listeners: 0, pairBonders: 0 };
+  for (const m of members) {
+    if (m.airtimeStyle === "includer") c.includers++;
+    else if (m.airtimeStyle === "driver") c.drivers++;
+    else if (m.airtimeStyle === "listener") c.listeners++;
+    else if (m.airtimeStyle === "pair_bonder") c.pairBonders++;
+  }
+  return c;
+}
+
 function genderDiversityOk(members: Candidate[]): boolean {
   const hasMixedIntent = members.some((m) => m.intent === "romantic" || m.intent === "both");
   if (!hasMixedIntent) return true;
@@ -269,7 +317,9 @@ export function formGroups(
         const candidate = remaining[i];
         const testGroup = [...group, candidate];
         if (!allPairsValid(testGroup, blockedSet, recentSet)) continue;
+        if (!compositionOk(testGroup, false)) continue;
         if (group.length + 1 >= min && !genderDiversityOk(testGroup)) continue;
+        if (group.length + 1 >= min && !compositionOk(testGroup, true)) continue;
         const score = groupScore(testGroup, cache);
         if (score > bestScore) {
           bestScore = score;
@@ -306,6 +356,7 @@ export function formGroups(
 
     if (!allPairsValid(newA, blockedSet, recentSet) || !allPairsValid(newB, blockedSet, recentSet)) continue;
     if (!genderDiversityOk(newA) || !genderDiversityOk(newB)) continue;
+    if (!compositionOk(newA, true) || !compositionOk(newB, true)) continue;
 
     const afterScore = groupScore(newA, cache) + groupScore(newB, cache);
     if (afterScore > beforeScore) {
@@ -314,9 +365,37 @@ export function formGroups(
     }
   }
 
+  // Repair pass: a group formed without an includer (no candidate for the swap
+  // above ever offered one) gets one more chance — pull an includer from any
+  // other group's non-critical members if doing so doesn't break that group.
+  for (let gi = 0; gi < groups.length; gi++) {
+    if (compositionOk(groups[gi], true)) continue;
+    outer: for (let gj = 0; gj < groups.length; gj++) {
+      if (gi === gj) continue;
+      const donor = groups[gj];
+      for (let mj = 0; mj < donor.length; mj++) {
+        if (donor[mj].airtimeStyle !== "includer") continue;
+        if (donor.length <= CAFE_MIN) continue; // don't strip a donor below its own minimum
+        const recipientIdx = groups[gi].findIndex((m) => m.airtimeStyle !== "includer");
+        if (recipientIdx === -1) continue;
+        const newDonor = donor.filter((_, idx) => idx !== mj);
+        const newRecipient = [...groups[gi]];
+        const [moved] = newRecipient.splice(recipientIdx, 1, donor[mj]);
+        const combinedRecipient = [...newRecipient];
+        if (!allPairsValid(combinedRecipient, blockedSet, recentSet)) continue;
+        if (!allPairsValid(newDonor, blockedSet, recentSet)) continue;
+        if (!compositionOk(newDonor, true)) continue;
+        groups[gj] = newDonor;
+        groups[gi] = combinedRecipient;
+        void moved;
+        break outer;
+      }
+    }
+  }
+
   const formed = groups
     .map((g) => ({ members: g, cohesion: groupScore(g, cache) }))
-    .filter((g) => g.cohesion >= MIN_COHESION);
+    .filter((g) => g.cohesion >= MIN_COHESION && compositionOk(g.members, true));
 
   const matchedIds = new Set(formed.flatMap((g) => g.members.map((m) => m.userId)));
   const unmatched = candidates.filter((c) => !matchedIds.has(c.userId));

@@ -75,7 +75,12 @@ eventsRouter.get("/:id", requireAuth, async (req, res) => {
   });
 });
 
-const bookEventSchema = z.object({ mode: z.enum(["solo", "matched"]) });
+const FITNESS_LEVEL_CATEGORIES = ["fitness", "trek", "sports", "football"];
+
+const bookEventSchema = z.object({
+  mode: z.enum(["solo", "matched"]),
+  fitnessLevel: z.enum(["just_starting", "casual", "regular", "very_serious"]).optional(),
+});
 
 eventsRouter.post("/:id/book", requireAuth, requireOnboarded("done"), async (req, res) => {
   const parsed = bookEventSchema.safeParse(req.body);
@@ -100,6 +105,7 @@ eventsRouter.post("/:id/book", requireAuth, requireOnboarded("done"), async (req
       intent: "vibes",
       groupComfort: "no_preference",
       groupSizePref: parsed.data.mode,
+      fitnessLevel: FITNESS_LEVEL_CATEGORIES.includes(event.category) ? parsed.data.fitnessLevel : undefined,
       status: "pending_payment",
       amountPaise: event.pricePaise,
     })

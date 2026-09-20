@@ -22,7 +22,15 @@ const WINDOWS: { id: string; label: string }[] = [
   { id: 'night', label: 'Night · 20:30' },
 ]
 
-type Stage = 'window' | 'area' | 'group' | 'review' | 'paying' | 'pool'
+type Stage = 'window' | 'area' | 'group' | 'dietary' | 'review' | 'paying' | 'pool'
+
+const DIETARY_OPTIONS = [
+  { id: 'no_preference', label: 'No preference' },
+  { id: 'vegetarian', label: 'Vegetarian' },
+  { id: 'non_vegetarian', label: 'Non-vegetarian' },
+  { id: 'vegan', label: 'Vegan' },
+  { id: 'jain', label: 'Jain' },
+]
 
 export function CafeBookingSheet({ date, onClose }: { date: string; onClose: () => void }) {
   const [stage, setStage] = useState<Stage>('window')
@@ -31,6 +39,7 @@ export function CafeBookingSheet({ date, onClose }: { date: string; onClose: () 
   const [groupSize, setGroupSize] = useState<string | number>('surprise')
   const [intent, setIntent] = useState<'friendship' | 'romantic' | 'both'>('friendship')
   const [groupComfort, setGroupComfort] = useState<'mixed' | 'same_gender' | 'no_preference'>('mixed')
+  const [dietaryPref, setDietaryPref] = useState('no_preference')
   const [poolCount, setPoolCount] = useState<number | null>(null)
   const [error, setError] = useState<string | null>(null)
 
@@ -54,6 +63,7 @@ export function CafeBookingSheet({ date, onClose }: { date: string; onClose: () 
         groupSize,
         intent,
         groupComfort,
+        dietaryPref,
       })
       const order = await api.post<{ orderId: string; provider: string }>('/payments/order', {
         bookingId: booking.booking.id,
@@ -181,6 +191,27 @@ export function CafeBookingSheet({ date, onClose }: { date: string; onClose: () 
               ))}
             </div>
 
+            <button onClick={() => setStage('dietary')} className="w-full rounded-2xl bg-lilac text-ink font-semibold py-4">
+              Continue
+            </button>
+          </div>
+        )}
+
+        {stage === 'dietary' && (
+          <div>
+            <h2 className="font-display text-lg font-semibold mb-1">Any dietary preference?</h2>
+            <p className="text-xs text-muted mb-4">Passed along to the cafe, never used for matching.</p>
+            <div className="flex flex-col gap-2 mb-6">
+              {DIETARY_OPTIONS.map((o) => (
+                <button
+                  key={o.id}
+                  onClick={() => setDietaryPref(o.id)}
+                  className={`rounded-xl border py-2.5 text-sm text-left px-3 ${dietaryPref === o.id ? 'border-lime bg-lime/10' : 'border-border bg-surface-2'}`}
+                >
+                  {o.label}
+                </button>
+              ))}
+            </div>
             <button onClick={() => setStage('review')} className="w-full rounded-2xl bg-lilac text-ink font-semibold py-4">
               Review
             </button>
@@ -194,6 +225,7 @@ export function CafeBookingSheet({ date, onClose }: { date: string; onClose: () 
               <p>{date} · {WINDOWS.find((w) => w.id === window_)?.label}</p>
               <p>{area}</p>
               <p>Group of {groupSize === 'surprise' ? 'surprise' : groupSize} · {intent}</p>
+              <p className="text-muted">{DIETARY_OPTIONS.find((o) => o.id === dietaryPref)?.label}</p>
             </div>
             <p className="text-xs text-muted mb-6">If we can't find your people, you get your ₹49 back. Promise.</p>
             {error && <p className="text-punch text-sm mb-4">{error}</p>}

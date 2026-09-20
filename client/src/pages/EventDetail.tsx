@@ -21,25 +21,45 @@ interface EventDetailData {
   coverImageUrl?: string | null
 }
 
+const FITNESS_LEVEL_CATEGORIES = ['fitness', 'trek', 'sports', 'football']
+const FITNESS_LEVELS: { id: string; label: string }[] = [
+  { id: 'just_starting', label: 'Just starting' },
+  { id: 'casual', label: 'Casual' },
+  { id: 'regular', label: 'Regular' },
+  { id: 'very_serious', label: 'Very serious' },
+]
+
 export default function EventDetail() {
   const { id } = useParams()
   const [, navigate] = useLocation()
   const [event, setEvent] = useState<EventDetailData | null>(null)
-  const [stage, setStage] = useState<'idle' | 'paying' | 'done'>('idle')
+  const [stage, setStage] = useState<'idle' | 'fitness' | 'paying' | 'done'>('idle')
   const [mode, setMode] = useState<'solo' | 'matched' | null>(null)
+  const [fitnessLevel, setFitnessLevel] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     if (id) api.get<{ event: EventDetailData }>(`/events/${id}`).then((r) => setEvent(r.event))
   }, [id])
 
-  async function book(selectedMode: 'solo' | 'matched') {
-    if (!id) return
+  function startBooking(selectedMode: 'solo' | 'matched') {
     setMode(selectedMode)
+    if (event && FITNESS_LEVEL_CATEGORIES.includes(event.category)) {
+      setStage('fitness')
+    } else {
+      book(selectedMode, undefined)
+    }
+  }
+
+  async function book(selectedMode: 'solo' | 'matched', level: string | undefined) {
+    if (!id) return
     setStage('paying')
     setError(null)
     try {
-      const booking = await api.post<{ ok: boolean; booking: any; amountPaise: number }>(`/events/${id}/book`, { mode: selectedMode })
+      const booking = await api.post<{ ok: boolean; booking: any; amountPaise: number }>(`/events/${id}/book`, {
+        mode: selectedMode,
+        fitnessLevel: level,
+      })
       const order = await api.post<{ orderId: string }>('/payments/order', { bookingId: booking.booking.id })
       const mock = await api.post<{ paymentId: string; signature: string }>('/payments/mock/pay', { orderId: order.orderId })
       await api.post('/payments/verify', {
@@ -59,6 +79,33 @@ export default function EventDetail() {
     return (
       <div className="app-shell page-detail flex items-center justify-center min-h-screen">
         <p className="text-muted text-sm">Loading…</p>
+      </div>
+    )
+  }
+
+  if (stage === 'fitness') {
+    return (
+      <div className="app-shell page-detail flex flex-col justify-center px-6 min-h-screen">
+        <h1 className="font-display text-xl font-semibold mb-1">What's your fitness level?</h1>
+        <p className="text-sm text-muted mb-6">Helps the host group people at a similar pace.</p>
+        <div className="flex flex-col gap-2">
+          {FITNESS_LEVELS.map((l) => (
+            <button
+              key={l.id}
+              onClick={() => setFitnessLevel(l.id)}
+              className={`rounded-xl border py-3 px-4 text-sm text-left ${fitnessLevel === l.id ? 'border-lime bg-lime/10' : 'border-border bg-surface-2'}`}
+            >
+              {l.label}
+            </button>
+          ))}
+        </div>
+        <button
+          disabled={!fitnessLevel || !mode}
+          onClick={() => mode && book(mode, fitnessLevel ?? undefined)}
+          className="w-full rounded-2xl bg-lilac text-ink font-semibold py-4 mt-8 disabled:opacity-40"
+        >
+          Continue
+        </button>
       </div>
     )
   }
@@ -117,14 +164,14 @@ export default function EventDetail() {
 
       <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[480px] p-4 bg-ink/95 backdrop-blur border-t border-border flex gap-3">
         <button
-          onClick={() => book('solo')}
+          onClick={() => startBooking('solo')}
           disabled={stage === 'paying'}
           className="flex-1 rounded-2xl border border-border py-3.5 text-sm font-semibold disabled:opacity-50"
         >
           {stage === 'paying' && mode === 'solo' ? 'Booking…' : `Solo ticket · ₹${(event.pricePaise / 100).toFixed(0)}`}
         </button>
         <button
-          onClick={() => book('matched')}
+          onClick={() => startBooking('matched')}
           disabled={stage === 'paying'}
           className="flex-1 rounded-2xl bg-tangerine text-ink font-semibold py-3.5 text-sm disabled:opacity-50"
         >

@@ -2,6 +2,7 @@ import "dotenv/config";
 import { db, sql } from "./client";
 import { venues, hosts, events, users, userTraits, meetSlots, icebreakerPrompts, bookings } from "./schema";
 import { AVATARS } from "../routes/identity";
+import { SUB_INTERESTS, HUMOUR_EDGE_HIGH_SLUGS, HUMOUR_EDGE_LOW_SLUGS } from "@delulu/shared";
 
 const AREAS: { city: string; area: string; pincode: string }[] = [
   { city: "Delhi NCR", area: "Delhi · Hauz Khas", pincode: "110016" },
@@ -162,18 +163,41 @@ export async function runSeed() {
       .returning();
     demoUserIds.push(u.id);
 
+    const chosenCategories = Array.from(
+      new Set(
+        Array.from({ length: randInt(3, 6) }, () =>
+          pick(["fitness", "music", "food", "travel", "movies", "books", "art", "gaming", "tech", "comedy"])
+        )
+      )
+    );
+    const interests: Record<string, string[]> = {};
+    for (const cat of chosenCategories) {
+      const subOptions = SUB_INTERESTS[cat]?.options ?? [];
+      const subCount = Math.min(subOptions.length, randInt(1, 3));
+      const shuffled = [...subOptions].sort(() => Math.random() - 0.5);
+      interests[cat] = shuffled.slice(0, subCount).map((o) => o.slug);
+    }
+
+    let humourEdge: string | null = null;
+    if (chosenCategories.includes("comedy")) {
+      const comedySlugs = interests["comedy"] ?? [];
+      if (comedySlugs.some((s) => HUMOUR_EDGE_HIGH_SLUGS.includes(s))) humourEdge = "high";
+      else if (comedySlugs.some((s) => HUMOUR_EDGE_LOW_SLUGS.includes(s))) humourEdge = "low";
+    }
+
     await db.insert(userTraits).values({
       userId: u.id,
-      socialEnergy: randInt(10, 95),
-      opennessToNew: randInt(10, 95),
-      humorStyle: randInt(10, 95),
+      interests,
+      socialInitiation: randInt(10, 95),
       conversationDepth: randInt(10, 95),
-      planningStyle: randInt(10, 95),
-      valuesScore: randInt(10, 95),
-      lifestyleScore: randInt(10, 95),
-      interests: Object.fromEntries(
-        Array.from({ length: randInt(3, 6) }, () => pick(["fitness", "music", "food", "travel", "movies", "books", "art", "gaming", "tech", "comedy"])).map((c) => [c, []])
-      ),
+      groupEnergyPref: randInt(10, 95),
+      disagreementTolerance: randInt(10, 95),
+      spontaneity: randInt(10, 95),
+      adaptability: randInt(10, 95),
+      humourStyleCategory: pick(["absurd", "banter", "dry", "wholesome"]),
+      humourEngagement: randInt(10, 95),
+      humourEdge,
+      airtimeStyle: pick(["driver", "includer", "listener", "pair_bonder"]),
       intent: pick(["friendship", "romantic", "both", "vibes"]),
       groupComfort: pick(["mixed", "same_gender", "no_preference"]),
     });

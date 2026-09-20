@@ -38,10 +38,10 @@ export interface PublicUser {
 export interface ScoreBreakdown {
   overall: number;
   interests: number;
-  personality: number;
-  values: number;
-  lifestyle: number;
   conversation: number;
-  humor: number;
-  age: number;
+  socialInitiationFit: number;
+  groupEnergyFit: number;
+  humourFit: number;
+  disagreementFit: number;
+  spontaneityFit: number;
 }

@@ -19,10 +19,11 @@ import {
   messages,
   auditLog,
   notifications,
+  userTraits,
 } from "../db/schema";
 import { eq, desc, sql as dsql, and } from "drizzle-orm";
 import { requireAuth, requireRole } from "../middleware/auth";
-import { runMatchingForSlot, runMatchingForEvent } from "../services/matching";
+import { runMatchingForSlot, runMatchingForEvent, computeComposition } from "../services/matching";
 import { eventRevenue } from "../services/revenue";
 
 export const adminRouter = Router();
@@ -73,18 +74,27 @@ adminRouter.get("/groups/:id", async (req, res) => {
   if (!group) return res.status(404).json({ error: "Not found" });
 
   const members = await db
-    .select({ member: matchGroupMembers, user: users })
+    .select({ member: matchGroupMembers, user: users, traits: userTraits })
     .from(matchGroupMembers)
     .innerJoin(users, eq(matchGroupMembers.userId, users.id))
+    .leftJoin(userTraits, eq(userTraits.userId, users.id))
     .where(eq(matchGroupMembers.groupId, group.id));
 
   const scores = await db.select().from(pairScores).where(eq(pairScores.groupId, group.id));
   const [venue] = group.venueId ? await db.select().from(venues).where(eq(venues.id, group.venueId)).limit(1) : [];
 
+  const composition = computeComposition(members.map((m) => ({ airtimeStyle: m.traits?.airtimeStyle ?? null })));
+
   res.json({
     group,
     venue,
-    members: members.map((m) => ({ userId: m.user.id, username: m.user.username })),
+    composition,
+    members: members.map((m) => ({
+      userId: m.user.id,
+      username: m.user.username,
+      airtimeStyle: m.traits?.airtimeStyle ?? null,
+      archetypeId: m.traits?.archetypeId ?? null,
+    })),
     pairScores: scores,
   });
 });

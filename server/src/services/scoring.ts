@@ -1,14 +1,15 @@
 import type { ScoreBreakdown } from "@delulu/shared";
 
 export interface TraitInput {
-  socialEnergy: number;
-  opennessToNew: number;
-  humorStyle: number;
+  // interestVector: sub-interest slug -> weight (1.0) or parent category slug -> weight (0.35)
+  interestVector: Record<string, number>;
   conversationDepth: number;
-  planningStyle: number;
-  valuesScore: number;
-  lifestyleScore: number;
-  interests: Record<string, string[]>;
+  socialInitiation: number;
+  groupEnergyPref: number;
+  disagreementTolerance: number;
+  spontaneity: number;
+  humourStyle: string | null;
+  humourEdge: string | null;
   dob: string | null;
 }
 
@@ -16,100 +17,146 @@ function clamp01to100(v: number) {
   return Math.max(0, Math.min(100, v));
 }
 
+/** Builds a weighted interest vector: 1.0 per sub-interest, 0.35 for the parent category itself. */
+export function buildInterestVector(interests: Record<string, string[]>): Record<string, number> {
+  const vector: Record<string, number> = {};
+  for (const [category, subSlugs] of Object.entries(interests ?? {})) {
+    vector[`category:${category}`] = 0.35;
+    for (const slug of subSlugs) {
+      vector[`sub:${category}:${slug}`] = 1.0;
+    }
+  }
+  return vector;
+}
+
+/** Weighted Jaccard overlap on the interest vector (sub-interests carry far more weight than the parent category alone). */
 function interestOverlap(a: TraitInput, b: TraitInput): number {
-  const aKeys = Object.keys(a.interests ?? {});
-  const bKeys = Object.keys(b.interests ?? {});
-  if (!aKeys.length || !bKeys.length) return 30;
-  const shared = aKeys.filter((k) => bKeys.includes(k)).length;
-  const union = new Set([...aKeys, ...bKeys]).size;
-  return clamp01to100((shared / union) * 130);
-}
-
-/** Rewards a moderate 15-35 point gap; penalizes near-identical or very large gaps. */
-function complementaryCurve(a: number, b: number): number {
-  const diff = Math.abs(a - b);
-  if (diff < 8) return 55 - (8 - diff) * 3;
-  if (diff <= 15) return 55 + (diff - 8) * 4;
-  if (diff <= 35) return 83 + Math.max(0, 17 - Math.abs(diff - 25));
-  return Math.max(20, 90 - (diff - 35) * 2);
-}
-
-function personalityFit(a: TraitInput, b: TraitInput): number {
-  const socialScore = complementaryCurve(a.socialEnergy, b.socialEnergy);
-  const planningScore = complementaryCurve(a.planningStyle, b.planningStyle);
-  const humorSim = 100 - Math.abs(a.humorStyle - b.humorStyle) * 0.6;
-  const convoSim = 100 - Math.abs(a.conversationDepth - b.conversationDepth) * 0.6;
-  return clamp01to100(0.35 * socialScore + 0.25 * planningScore + 0.2 * humorSim + 0.2 * convoSim);
-}
-
-function valuesAlignment(a: TraitInput, b: TraitInput): number {
-  return clamp01to100(100 - Math.abs(a.valuesScore - b.valuesScore) * 0.8);
-}
-
-function lifestyleFit(a: TraitInput, b: TraitInput): number {
-  return clamp01to100(100 - Math.abs(a.lifestyleScore - b.lifestyleScore) * 0.7);
+  const keys = new Set([...Object.keys(a.interestVector), ...Object.keys(b.interestVector)]);
+  if (!keys.size) return 30;
+  let intersection = 0;
+  let union = 0;
+  for (const k of keys) {
+    const av = a.interestVector[k] ?? 0;
+    const bv = b.interestVector[k] ?? 0;
+    intersection += Math.min(av, bv);
+    union += Math.max(av, bv);
+  }
+  if (!union) return 30;
+  return clamp01to100((intersection / union) * 100);
 }
 
 function conversationFit(a: TraitInput, b: TraitInput): number {
-  return clamp01to100(100 - Math.abs(a.conversationDepth - b.conversationDepth) * 0.5);
+  const gap = Math.abs(a.conversationDepth - b.conversationDepth);
+  const base = 100 - gap;
+  // Hard penalty if the gap is large — one wants banter, the other wants depth.
+  return clamp01to100(gap > 45 ? base - 20 : base);
 }
 
-function humorFit(a: TraitInput, b: TraitInput): number {
-  return clamp01to100(100 - Math.abs(a.humorStyle - b.humorStyle) * 0.5);
+/** NOT similarity — peaks at a 20-40 point gap (one leads, one follows), falls off when near-identical or too far apart. */
+function socialInitiationFit(a: TraitInput, b: TraitInput): number {
+  const gap = Math.abs(a.socialInitiation - b.socialInitiation);
+  if (gap < 8) return 45;
+  if (gap <= 20) return 45 + ((gap - 8) / 12) * 40;
+  if (gap <= 40) return 85 + Math.max(0, 15 - Math.abs(gap - 30));
+  if (gap <= 55) return Math.max(40, 90 - (gap - 40) * 2);
+  return Math.max(15, 60 - (gap - 55) * 1.5);
 }
 
-function ageOf(dob: string | null): number {
-  if (!dob) return 24;
-  const ms = Date.now() - new Date(dob).getTime();
-  return Math.floor(ms / (365.25 * 24 * 3600 * 1000));
+function groupEnergyFit(a: TraitInput, b: TraitInput): number {
+  return clamp01to100(100 - Math.abs(a.groupEnergyPref - b.groupEnergyPref));
 }
 
-function ageProximity(a: TraitInput, b: TraitInput): number {
-  const diff = Math.abs(ageOf(a.dob) - ageOf(b.dob));
-  return clamp01to100(100 - diff * 8);
+const HUMOUR_STYLES = ["absurd", "banter", "dry", "wholesome"];
+
+function humourFit(a: TraitInput, b: TraitInput): number {
+  if (!a.humourStyle || !b.humourStyle) return 60;
+
+  let base: number;
+  if (a.humourStyle === b.humourStyle) {
+    base = 100;
+  } else {
+    const pairs: Record<string, number> = {
+      "absurd|banter": 85,
+      "dry|wholesome": 70,
+    };
+    const key1 = `${a.humourStyle}|${b.humourStyle}`;
+    const key2 = `${b.humourStyle}|${a.humourStyle}`;
+    base = pairs[key1] ?? pairs[key2] ?? 45;
+  }
+
+  // Dark-humour guard: a high-edge person next to a low-edge person is friction, regardless of style match.
+  if ((a.humourEdge === "high" && b.humourEdge === "low") || (a.humourEdge === "low" && b.humourEdge === "high")) {
+    base -= 25;
+  }
+  return clamp01to100(base);
+}
+
+function disagreementFit(a: TraitInput, b: TraitInput): number {
+  return clamp01to100(100 - Math.abs(a.disagreementTolerance - b.disagreementTolerance) * 1.2);
+}
+
+function spontaneityFit(a: TraitInput, b: TraitInput): number {
+  return clamp01to100(100 - Math.abs(a.spontaneity - b.spontaneity));
 }
 
 interface ScoreWeights {
   interests: number;
-  personality: number;
-  values: number;
-  lifestyle: number;
   conversation: number;
-  humor: number;
-  age: number;
+  socialInitiation: number;
+  groupEnergy: number;
+  humour: number;
+  disagreement: number;
+  spontaneity: number;
 }
 
-const CAFE_WEIGHTS: ScoreWeights = { interests: 0.3, personality: 0.2, values: 0.15, lifestyle: 0.12, conversation: 0.1, humor: 0.08, age: 0.05 };
-/** Event matching weights everyone already shares the event's interest, so interest overlap counts less and personality fit counts more. */
-const EVENT_WEIGHTS: ScoreWeights = { interests: 0.2, personality: 0.3, values: 0.15, lifestyle: 0.13, conversation: 0.12, humor: 0.07, age: 0.03 };
+const CAFE_WEIGHTS: ScoreWeights = {
+  interests: 0.32,
+  conversation: 0.18,
+  socialInitiation: 0.14,
+  groupEnergy: 0.12,
+  humour: 0.1,
+  disagreement: 0.08,
+  spontaneity: 0.06,
+};
+
+/** Event matching: everyone already shares the event's interest, so interest overlap counts for less and personality fit counts for more. */
+const EVENT_WEIGHTS: ScoreWeights = {
+  interests: 0.18,
+  conversation: 0.22,
+  socialInitiation: 0.18,
+  groupEnergy: 0.16,
+  humour: 0.12,
+  disagreement: 0.09,
+  spontaneity: 0.05,
+};
 
 function computePairScore(a: TraitInput, b: TraitInput, weights: ScoreWeights): ScoreBreakdown {
   const interests = interestOverlap(a, b);
-  const personality = personalityFit(a, b);
-  const values = valuesAlignment(a, b);
-  const lifestyle = lifestyleFit(a, b);
   const conversation = conversationFit(a, b);
-  const humor = humorFit(a, b);
-  const age = ageProximity(a, b);
+  const socialInit = socialInitiationFit(a, b);
+  const groupEnergy = groupEnergyFit(a, b);
+  const humour = humourFit(a, b);
+  const disagreement = disagreementFit(a, b);
+  const spontaneity = spontaneityFit(a, b);
 
   const overall =
     weights.interests * interests +
-    weights.personality * personality +
-    weights.values * values +
-    weights.lifestyle * lifestyle +
     weights.conversation * conversation +
-    weights.humor * humor +
-    weights.age * age;
+    weights.socialInitiation * socialInit +
+    weights.groupEnergy * groupEnergy +
+    weights.humour * humour +
+    weights.disagreement * disagreement +
+    weights.spontaneity * spontaneity;
 
   return {
     overall: Math.round(clamp01to100(overall)),
     interests: Math.round(interests),
-    personality: Math.round(personality),
-    values: Math.round(values),
-    lifestyle: Math.round(lifestyle),
     conversation: Math.round(conversation),
-    humor: Math.round(humor),
-    age: Math.round(age),
+    socialInitiationFit: Math.round(socialInit),
+    groupEnergyFit: Math.round(groupEnergy),
+    humourFit: Math.round(humour),
+    disagreementFit: Math.round(disagreement),
+    spontaneityFit: Math.round(spontaneity),
   };
 }
 
