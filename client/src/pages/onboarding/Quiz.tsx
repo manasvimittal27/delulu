@@ -79,7 +79,7 @@ export default function Quiz() {
 
   if (showRomanticPrefs) {
     return (
-      <div className="app-shell px-6 pt-10 pb-10 min-h-screen flex flex-col">
+      <div className="app-shell onboarding-screen px-6 pt-10 pb-10 min-h-screen flex flex-col">
         <h1 className="font-display text-xl font-semibold mb-1">Who are you open to meeting?</h1>
         <p className="text-sm text-muted mb-6">This only affects romantic matching, never friendship tables.</p>
 
@@ -120,7 +120,7 @@ export default function Quiz() {
 
   if (showInterstitial) {
     return (
-      <div className="app-shell flex flex-col justify-center items-center px-6 min-h-screen text-center">
+      <div className="app-shell onboarding-screen flex flex-col justify-center items-center px-6 min-h-screen text-center">
         <motion.p
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -139,7 +139,7 @@ export default function Quiz() {
   }
 
   return (
-    <div className="app-shell px-6 pt-10 pb-10 min-h-screen flex flex-col">
+    <div className="app-shell onboarding-screen px-6 pt-10 pb-10 min-h-screen flex flex-col">
       <div className="w-full h-1.5 rounded-full bg-surface-2 mb-8">
         <motion.div
           className="h-full rounded-full bg-lime"

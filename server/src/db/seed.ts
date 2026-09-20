@@ -3,19 +3,18 @@ import { db, sql } from "./client";
 import { venues, hosts, events, users, userTraits, meetSlots, icebreakerPrompts, bookings } from "./schema";
 import { AVATARS } from "../routes/identity";
 
-const AREAS: { city: string; area: string }[] = [
-  { city: "Bengaluru", area: "Indiranagar" },
-  { city: "Bengaluru", area: "Koramangala" },
-  { city: "Bengaluru", area: "HSR" },
-  { city: "Bengaluru", area: "Jayanagar" },
-  { city: "Delhi", area: "Hauz Khas" },
-  { city: "Delhi", area: "CP" },
-  { city: "Delhi", area: "GK" },
-  { city: "Mumbai", area: "Bandra" },
-  { city: "Mumbai", area: "Andheri" },
-  { city: "Mumbai", area: "Lower Parel" },
-  { city: "Pune", area: "Koregaon Park" },
-  { city: "Pune", area: "Baner" },
+const AREAS: { city: string; area: string; pincode: string }[] = [
+  { city: "Delhi NCR", area: "Delhi · Hauz Khas", pincode: "110016" },
+  { city: "Delhi NCR", area: "Delhi · Connaught Place", pincode: "110001" },
+  { city: "Delhi NCR", area: "Delhi · Greater Kailash", pincode: "110048" },
+  { city: "Delhi NCR", area: "Delhi · Saket", pincode: "110017" },
+  { city: "Delhi NCR", area: "Gurugram · Cyber Hub", pincode: "122002" },
+  { city: "Delhi NCR", area: "Gurugram · Sector 29", pincode: "122001" },
+  { city: "Delhi NCR", area: "Gurugram · Golf Course Road", pincode: "122011" },
+  { city: "Delhi NCR", area: "Noida · Sector 18", pincode: "201301" },
+  { city: "Delhi NCR", area: "Noida · Sector 62", pincode: "201309" },
+  { city: "Delhi NCR", area: "Faridabad · Sector 15", pincode: "121007" },
+  { city: "Delhi NCR", area: "Ghaziabad · Indirapuram", pincode: "201014" },
 ];
 
 const ADJ = ["velvet", "chaotic", "midnight", "feral", "cosmic", "salty", "dreamy", "jazzy", "unhinged", "wobbly", "spicy", "gremlin", "sleepy", "electric", "rogue"];
@@ -72,7 +71,7 @@ export async function runSeed() {
     phone: "9999999999",
     username: "delulu_admin",
     onboardingStep: "done",
-    city: "Bengaluru",
+    city: "Delhi NCR",
     role: "admin",
     termsAcceptedAt: new Date(),
   });
@@ -80,15 +79,15 @@ export async function runSeed() {
   console.log("Seeding hosts...");
   const [hostUser1] = await db
     .insert(users)
-    .values({ phone: "9000000001", username: "verified_host_demo", onboardingStep: "done", city: "Bengaluru", role: "host" })
+    .values({ phone: "9000000001", username: "verified_host_demo", onboardingStep: "done", city: "Delhi NCR", role: "host" })
     .returning();
   const [hostUser2] = await db
     .insert(users)
-    .values({ phone: "9000000002", username: "pending_host_demo", onboardingStep: "done", city: "Mumbai", role: "host" })
+    .values({ phone: "9000000002", username: "pending_host_demo", onboardingStep: "done", city: "Delhi NCR", role: "host" })
     .returning();
   const [hostUser3] = await db
     .insert(users)
-    .values({ phone: "9000000003", username: "rejected_host_demo", onboardingStep: "done", city: "Delhi", role: "host" })
+    .values({ phone: "9000000003", username: "rejected_host_demo", onboardingStep: "done", city: "Delhi NCR", role: "host" })
     .returning();
 
   const [hostVerified] = await db
@@ -154,7 +153,7 @@ export async function runSeed() {
         avatarId: pick(AVATARS),
         avatarColor: pick(["#A78BFA", "#FF5DA2", "#C4F542", "#FF8A3D", "#5CC8FF"]),
         city: area.city,
-        pincode: area.city === "Bengaluru" ? "560001" : area.city === "Delhi" ? "110001" : area.city === "Mumbai" ? "400001" : "411001",
+        pincode: area.pincode,
         dob: `${randInt(1995, 2006)}-0${randInt(1, 9)}-1${randInt(0, 8)}`,
         gender: pick(["male", "female", "non_binary"]),
         onboardingStep: "done",

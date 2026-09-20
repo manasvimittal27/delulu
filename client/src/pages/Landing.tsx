@@ -1,13 +1,18 @@
 import { motion } from 'framer-motion'
-import { Link } from 'wouter'
 import { useState } from 'react'
+import { Link } from 'wouter'
+import { ArrowUpRight, Coffee, HeartHandshake, LockKeyhole, MapPin, MessageCircle, ShieldCheck, Sparkles, UsersRound } from 'lucide-react'
 import { api } from '@/lib/api'
+import heroImage from '@/assets/delulu/hero-social-table.jpg'
+import cafeImage from '@/assets/delulu/track-cafe.jpg'
+import experienceImage from '@/assets/delulu/track-experience.jpg'
+import communityImage from '@/assets/delulu/community-laugh.jpg'
 
 const STEPS = [
-  'Tell us your vibe',
-  'Pick a date',
-  'Get matched into a group chat',
-  'Show up',
+  { title: 'Tell us your vibe', body: 'A quick, low-pressure quiz helps us understand what kind of energy feels right.' },
+  { title: 'Pick a date', body: 'Choose a cafe table or a curated experience in your city.' },
+  { title: 'Get your table', body: 'Meet a small group of strangers in a chat before you meet IRL.' },
+  { title: 'Show up', body: 'No swiping. No performance. Just one good reason to leave the house.' },
 ]
 
 const FAQS = [
@@ -24,170 +29,162 @@ const FAQS = [
 export default function Landing() {
   const [waitlistCity, setWaitlistCity] = useState('')
   const [waitlistDone, setWaitlistDone] = useState(false)
+  const [waitlistError, setWaitlistError] = useState<string | null>(null)
 
   async function joinWaitlist() {
     if (!waitlistCity.trim()) return
-    await api.post('/waitlist', { city: waitlistCity.trim() })
-    setWaitlistDone(true)
+    setWaitlistError(null)
+    try {
+      await api.post('/waitlist', { city: waitlistCity.trim() })
+      setWaitlistDone(true)
+    } catch (e) {
+      setWaitlistError(e instanceof Error ? e.message : 'Unable to join the waitlist right now')
+    }
   }
 
   return (
     <div className="app-shell overflow-x-hidden">
-      <section className="relative px-6 pt-16 pb-14 overflow-hidden">
-        <motion.div
-          className="absolute -top-24 -left-20 w-64 h-64 rounded-full bg-lilac/30 blur-3xl"
-          animate={{ y: [0, 20, 0] }}
-          transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
-        />
-        <motion.div
-          className="absolute top-10 -right-16 w-56 h-56 rounded-full bg-punch/30 blur-3xl"
-          animate={{ y: [0, -16, 0] }}
-          transition={{ duration: 7, repeat: Infinity, ease: 'easeInOut' }}
-        />
-
-        <div className="relative flex items-center gap-2 mb-10">
-          {['🐸', '👽', '🍄', '🐧'].map((e, i) => (
-            <motion.span
-              key={e}
-              className="w-9 h-9 rounded-full bg-surface-2 border border-border grid place-items-center text-base"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.08 }}
-            >
-              {e}
-            </motion.span>
-          ))}
-          <span className="text-xs text-muted ml-1">40+ strangers online in Bengaluru</span>
+      <section className="landing-hero">
+        <div className="hero-copy">
+          <p className="page-kicker flex items-center gap-2"><Sparkles size={13} /> A social experiment for real life</p>
+          <h1 className="display-xl">Be delulu.<br /><span className="editorial-serif">Show up anyway.</span></h1>
+          <p>Meet 4–6 strangers over coffee, or find your people through a curated experience. No photos, no swiping, no small talk about the weather.</p>
+          <div className="hero-actions">
+            <Link href="/join" className="primary-button">Book a table <ArrowUpRight size={17} /></Link>
+            <Link href="/events" className="secondary-button">Browse experiences <ArrowUpRight size={16} /></Link>
+          </div>
+          <div className="hero-proof">
+            <div className="proof-dots" aria-hidden="true"><span><UsersRound size={13} /></span><span><Coffee size={13} /></span><span><HeartHandshake size={13} /></span></div>
+            <span>For people who want more than another group chat.</span>
+          </div>
         </div>
-
-        <h1 className="relative font-display text-[2.6rem] leading-[1.05] font-semibold tracking-tight">
-          Be delulu.
-          <br />
-          Show up anyway.
-        </h1>
-        <p className="relative mt-4 text-muted text-[15px] leading-relaxed max-w-[360px]">
-          Meet 4 strangers over coffee. No photos, no swiping, no small talk about the weather.
-        </p>
-
-        <div className="relative mt-8 flex flex-col gap-3">
-          <Link
-            href="/join"
-            className="w-full text-center rounded-2xl bg-lilac text-ink font-semibold py-4 active:scale-[0.98] transition-transform"
-          >
-            Book a cafe table →
-          </Link>
-          <Link
-            href="/events"
-            className="w-full text-center rounded-2xl border border-border py-4 font-medium text-fg"
-          >
-            Browse events
-          </Link>
+        <div className="hero-visual">
+          <img className="hero-image" src={heroImage} alt="Friends getting to know each other around a cafe table" />
+          <div className="hero-image-frame" />
+          <motion.div className="hero-note hero-note-one" initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: .35 }}><LockKeyhole size={15} /> Avatars first. Names later.</motion.div>
+          <motion.div className="hero-note hero-note-two" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: .55 }}><MessageCircle size={15} /> 4 strangers. One table.</motion.div>
         </div>
       </section>
 
-      <section className="px-6 py-10 border-t border-border">
-        <h2 className="font-display text-xl font-semibold mb-6">How it works</h2>
-        <div className="flex flex-col gap-3">
+      <section id="how-it-works" className="story-section">
+        <div className="story-intro">
+          <p className="page-kicker">01 / How it works</p>
+          <div>
+            <h2>Less screen time. More <span className="editorial-serif">plot twists.</span></h2>
+            <p className="mt-5">Delulu makes the first move easier. We take care of the matching and the structure — you just decide to show up.</p>
+          </div>
+        </div>
+        <div className="step-grid">
           {STEPS.map((step, i) => (
-            <div key={step} className="flex items-center gap-3">
-              <div className="flex flex-col items-center">
-                <div className="w-8 h-8 rounded-full bg-surface-2 border border-border grid place-items-center text-xs font-semibold">
-                  {i + 1}
-                </div>
-                {i < STEPS.length - 1 && <div className="w-px h-6 bg-border" />}
-              </div>
-              <p className="text-sm py-1.5">{step}</p>
+            <div key={step.title} className="step-card">
+              <div className="step-number">0{i + 1}</div>
+              <h3>{step.title}</h3>
+              <p>{step.body}</p>
             </div>
           ))}
         </div>
       </section>
 
-      <section className="px-6 py-10 border-t border-border grid grid-cols-1 gap-4">
-        <h2 className="font-display text-xl font-semibold">Two tracks</h2>
-        <div className="rounded-2xl p-5 bg-gradient-to-br from-sky/20 to-lilac/20 border border-border">
-          <p className="text-xs uppercase tracking-wide text-sky font-semibold">Cafe</p>
-          <p className="font-display text-2xl font-semibold mt-1">₹49 · 4–6 people</p>
-          <p className="text-sm text-muted mt-1">90 minutes at a partner cafe near you.</p>
-        </div>
-        <div className="rounded-2xl p-5 bg-gradient-to-br from-tangerine/20 to-punch/20 border border-border">
-          <p className="text-xs uppercase tracking-wide text-tangerine font-semibold">Events</p>
-          <p className="font-display text-2xl font-semibold mt-1">From ₹299 · 6–10 people</p>
-          <p className="text-sm text-muted mt-1">Curated experiences, hosted or Delulu-matched.</p>
-        </div>
-      </section>
-
-      <section className="px-6 py-10 border-t border-border">
-        <h2 className="font-display text-xl font-semibold mb-2">The anonymity promise</h2>
-        <p className="text-sm text-muted leading-relaxed">
-          You're an avatar + username until 2 hours before the meetup. Then first names unlock — 2 hours before you meet.
-          <br />
-          <span className="text-fg font-medium">No photo uploads. Ever.</span>
-        </p>
-      </section>
-
-      <section className="px-6 py-10 border-t border-border">
-        <h2 className="font-display text-xl font-semibold mb-3">Safety, built in</h2>
-        <ul className="text-sm text-muted space-y-2 leading-relaxed">
-          <li>Public venues only. We like mystery, not unnecessary risk.</li>
-          <li>Phone verification for every account.</li>
-          <li>Check-in on arrival + a post-meetup safety check.</li>
-          <li>One-tap report, and no-show accountability.</li>
-          <li>Your phone number never appears to other members.</li>
-        </ul>
-      </section>
-
-      <section className="px-6 py-10 border-t border-border">
-        <p className="text-xs uppercase tracking-wide text-muted mb-3">Example Delulu table</p>
-        <div className="rounded-2xl bg-surface-2 border border-border p-4 space-y-3 text-sm">
-          <p className="font-medium text-fg">Table 4 — The Feral Croissants</p>
-          <p className="text-muted italic">"What is the weirdest fact you know?"</p>
-          <p>🐸 <span className="text-lilac">chaotic_samosa:</span> "Octopuses have three hearts."</p>
-          <p>👽 <span className="text-punch">midnight_gremlin:</span> "Okay mine is much worse..."</p>
-          <p>🍄 <span className="text-lime">velvet_penguin:</span> "I once..."</p>
-        </div>
-      </section>
-
-      <section className="px-6 py-10 border-t border-border">
-        <h2 className="font-display text-xl font-semibold mb-2">Not in your city yet?</h2>
-        <p className="text-sm text-muted mb-4">Join the waitlist and we'll ping you when Delulu lands near you.</p>
-        {waitlistDone ? (
-          <p className="text-sm text-lime">You're on the list. The algorithm has entered the chat.</p>
-        ) : (
-          <div className="flex gap-2">
-            <input
-              value={waitlistCity}
-              onChange={(e) => setWaitlistCity(e.target.value)}
-              placeholder="Your city"
-              className="flex-1 rounded-xl bg-surface-2 border border-border px-4 py-3 text-sm outline-none focus:border-lilac"
-            />
-            <button
-              onClick={joinWaitlist}
-              className="rounded-xl bg-lime text-ink font-semibold px-4 py-3 text-sm"
-            >
-              Join
-            </button>
+      <section id="tracks" className="story-section">
+        <div className="story-intro">
+          <p className="page-kicker">02 / Pick your energy</p>
+          <div>
+            <h2>Two ways to meet <span className="editorial-serif">your people.</span></h2>
+            <p className="mt-5">Same no-pressure spirit, different setting. Choose what feels like a good story waiting to happen.</p>
           </div>
-        )}
-      </section>
-
-      <section className="px-6 py-10 border-t border-border pb-28">
-        <h2 className="font-display text-xl font-semibold mb-4">FAQ</h2>
-        <div className="space-y-4">
-          {FAQS.map((f) => (
-            <details key={f.q} className="rounded-xl bg-surface-2 border border-border p-4">
-              <summary className="text-sm font-medium cursor-pointer">{f.q}</summary>
-              <p className="text-sm text-muted mt-2 leading-relaxed">{f.a}</p>
-            </details>
-          ))}
+        </div>
+        <div className="track-grid">
+          <article className="track-card">
+            <img src={cafeImage} alt="Friends talking over coffee at a cafe" />
+            <div className="track-card-content">
+              <span className="track-pill"><Coffee size={14} /> The cafe table</span>
+              <h3>Small table. Big conversation.</h3>
+              <p>4–6 people, one cosy cafe, 90 minutes, and a few prompts to get the conversation moving.</p>
+            </div>
+          </article>
+          <article className="track-card">
+            <img src={experienceImage} alt="Young adults making pottery together" />
+            <div className="track-card-content">
+              <span className="track-pill"><Sparkles size={14} /> Curated experiences</span>
+              <h3>Do something, together.</h3>
+              <p>6–10 people, from pottery and art to fitness and whatever your city is curious about next.</p>
+            </div>
+          </article>
         </div>
       </section>
 
-      <footer className="px-6 py-8 border-t border-border flex gap-4 flex-wrap justify-center pb-32">
-        {['safety', 'terms', 'privacy', 'refunds', 'hosts'].map((p) => (
-          <a key={p} href={`/legal/${p}`} className="text-xs text-muted underline capitalize">
-            {p}
-          </a>
-        ))}
+      <section className="story-section">
+        <div className="promise-grid">
+          <article className="promise-card highlight">
+            <LockKeyhole size={24} strokeWidth={1.8} />
+            <h3>Be a username before you are a profile.</h3>
+            <p>You're an avatar and a vibe until two hours before the meetup. No photo uploads. No browsing people like products.</p>
+          </article>
+          <article className="promise-card">
+            <ShieldCheck size={24} color="var(--delulu-punch)" strokeWidth={1.8} />
+            <h3>Soft landing, built in.</h3>
+            <ul>
+              <li>Public venues only.</li>
+              <li>Phone verification for every account.</li>
+              <li>Arrival check-ins and a one-tap report.</li>
+              <li>Your phone number never appears to other members.</li>
+            </ul>
+          </article>
+        </div>
+        <div className="mt-4 overflow-hidden rounded-[26px] relative min-h-[260px]">
+          <img src={communityImage} alt="A group of friends laughing together after meeting" className="absolute inset-0 w-full h-full object-cover" />
+          <div className="absolute inset-0 bg-gradient-to-r from-black/65 via-black/20 to-transparent" />
+          <div className="relative z-1 max-w-md p-8 md:p-12 text-white">
+            <p className="page-kicker text-white/70">The Delulu promise</p>
+            <p className="font-display text-2xl md:text-4xl font-semibold tracking-tight mt-3">Come as you are. Leave with a story.</p>
+          </div>
+        </div>
+      </section>
+
+      <section className="story-section">
+        <div className="waitlist-band">
+          <div>
+            <p className="page-kicker text-ink/60">03 / Delhi NCR and beyond</p>
+            <h2 className="mt-4">Not in Delhi NCR <span className="editorial-serif">yet?</span></h2>
+            <p>We’re starting across Delhi, Gurugram and Noida. Tell us where you are and we’ll ping you when Delulu lands nearby.</p>
+          </div>
+          {waitlistDone ? (
+            <div className="rounded-2xl bg-ink/10 p-5 text-sm font-semibold">You’re on the list. We’ll be in touch.</div>
+          ) : (
+            <div>
+              <div className="waitlist-form">
+                <input value={waitlistCity} onChange={(e) => setWaitlistCity(e.target.value)} placeholder="Delhi / Gurugram / Noida" className="input" aria-label="Your city" />
+                <button onClick={joinWaitlist} className="primary-button">Join waitlist <ArrowUpRight size={16} /></button>
+              </div>
+              {waitlistError && <p className="text-punch text-xs mt-3">{waitlistError}</p>}
+            </div>
+          )}
+        </div>
+      </section>
+
+      <section className="story-section">
+        <div className="faq-grid">
+          <div>
+            <p className="page-kicker">04 / FAQ</p>
+            <h2 className="mt-5">Good questions are a <span className="editorial-serif">green flag.</span></h2>
+          </div>
+          <div className="faq-list">
+            {FAQS.map((f) => (
+              <details key={f.q}>
+                <summary>{f.q}</summary>
+                <p>{f.a}</p>
+              </details>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <footer className="landing-footer">
+        <div><span className="font-semibold text-fg">delulu</span><span className="ml-3">show up anyway.</span></div>
+        <div className="landing-footer-links">
+          {['safety', 'terms', 'privacy', 'refunds', 'hosts'].map((page) => <a key={page} href={`/legal/${page}`}>{page}</a>)}
+          <span className="inline-flex items-center gap-1"><MapPin size={12} /> Delhi NCR & beyond</span>
+        </div>
       </footer>
     </div>
   )

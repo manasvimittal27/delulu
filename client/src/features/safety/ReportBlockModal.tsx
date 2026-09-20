@@ -25,7 +25,7 @@ export function ReportBlockModal({ userId, groupId, onClose }: { userId: string;
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50">
-      <div className="w-full max-w-[480px] rounded-t-3xl bg-surface border-t border-border p-6">
+      <div className="modal-sheet rounded-t-3xl bg-surface border-t border-border p-6">
         {done ? (
           <p className="text-center text-sm text-lime py-4">Thanks. Our team will look into it.</p>
         ) : (

@@ -11,7 +11,7 @@ const CAFE_PRICE_PAISE = 4900;
 
 plansRouter.get("/calendar", requireAuth, requireOnboarded("done"), async (req, res) => {
   const user = (req as any).user;
-  const city = user.city ?? "Bengaluru";
+  const city = user.city ?? "Delhi NCR";
   const today = new Date();
   const end = new Date(today);
   end.setDate(end.getDate() + 45);
@@ -92,7 +92,7 @@ plansRouter.post("/cafe/book", requireAuth, requireOnboarded("done"), async (req
   if (!slot) {
     [slot] = await db
       .insert(meetSlots)
-      .values({ date, window, area, city: user.city ?? "Bengaluru", track: "cafe" })
+      .values({ date, window, area, city: user.city ?? "Delhi NCR", track: "cafe" })
       .returning();
   }
 

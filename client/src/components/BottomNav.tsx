@@ -12,8 +12,8 @@ export function BottomNav() {
   const [location] = useLocation()
 
   return (
-    <nav className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[480px] z-40">
-      <div className="mx-3 mb-3 flex items-center justify-around rounded-2xl border border-border bg-surface/95 backdrop-blur px-2 py-2 shadow-[0_10px_30px_-10px_rgba(0,0,0,0.6)]">
+    <nav className="mobile-bottom-nav" aria-label="App navigation">
+      <div className="mobile-bottom-nav-inner">
         {TABS.map((tab) => {
           const active = location.startsWith(tab.path)
           const Icon = tab.icon
@@ -21,12 +21,11 @@ export function BottomNav() {
             <Link
               key={tab.path}
               href={tab.path}
-              className={`flex flex-col items-center gap-1 px-4 py-1.5 rounded-xl transition-colors ${
-                active ? 'text-ink bg-lime' : 'text-muted'
-              }`}
+              className={`mobile-nav-item ${active ? 'active' : ''}`}
+              aria-current={active ? 'page' : undefined}
             >
-              <Icon size={20} strokeWidth={active ? 2.5 : 2} />
-              <span className="text-[11px] font-medium">{tab.label}</span>
+              <Icon size={18} strokeWidth={active ? 2.4 : 1.8} />
+              <span>{tab.label}</span>
             </Link>
           )
         })}

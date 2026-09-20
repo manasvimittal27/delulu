@@ -58,14 +58,14 @@ export default function AdminDashboard() {
   }, [])
 
   if (!user) {
-    return <div className="app-shell flex items-center justify-center min-h-screen"><p className="text-muted text-sm">Sign in first.</p></div>
+    return <div className="app-shell status-screen"><p className="text-muted text-sm">Sign in first.</p></div>
   }
   if (forbidden || user.role !== 'admin') {
-    return <div className="app-shell flex items-center justify-center min-h-screen"><p className="text-muted text-sm">Admins only.</p></div>
+    return <div className="app-shell status-screen"><p className="text-muted text-sm">Admins only.</p></div>
   }
 
   return (
-    <div className="app-shell px-4 pt-10 pb-16 min-h-screen">
+    <div className="app-shell admin-screen page-detail px-4 pt-10 pb-16 min-h-screen">
       <h1 className="font-display text-2xl font-semibold px-2 mb-4">Admin</h1>
       <div className="flex gap-2 overflow-x-auto px-2 mb-6 pb-1">
         {TABS.map((t) => (
@@ -383,7 +383,7 @@ function VenuesTab() {
 
 function NewVenueForm({ onClose, onCreated }: { onClose: () => void; onCreated: () => void }) {
   const [name, setName] = useState('')
-  const [city, setCity] = useState('Bengaluru')
+  const [city, setCity] = useState('Delhi NCR')
   const [area, setArea] = useState('')
   const [address, setAddress] = useState('')
   const [capacity, setCapacity] = useState('6')
@@ -405,8 +405,8 @@ function NewVenueForm({ onClose, onCreated }: { onClose: () => void; onCreated: 
         <h2 className="font-display text-lg font-semibold mb-4">New venue</h2>
         <div className="space-y-3">
           <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Name" className="input" />
-          <input value={city} onChange={(e) => setCity(e.target.value)} placeholder="City" className="input" />
-          <input value={area} onChange={(e) => setArea(e.target.value)} placeholder="Area" className="input" />
+          <input value={city} onChange={(e) => setCity(e.target.value)} placeholder="City (Delhi NCR)" className="input" />
+          <input value={area} onChange={(e) => setArea(e.target.value)} placeholder="Area (Delhi, Gurugram, Noida...)" className="input" />
           <input value={address} onChange={(e) => setAddress(e.target.value)} placeholder="Address" className="input" />
           <input value={capacity} onChange={(e) => setCapacity(e.target.value)} placeholder="Capacity" className="input" />
         </div>

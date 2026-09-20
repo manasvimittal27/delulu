@@ -94,7 +94,7 @@ export default function ChatRoom() {
 
   if (!detail) {
     return (
-      <div className="app-shell flex items-center justify-center min-h-screen">
+      <div className="app-shell chat-screen flex items-center justify-center min-h-screen">
         <p className="text-muted text-sm">Loading table…</p>
       </div>
     )
@@ -103,7 +103,7 @@ export default function ChatRoom() {
   const meetAtPast = new Date(detail.group.meetAt).getTime() < Date.now()
 
   return (
-    <div className="app-shell flex flex-col min-h-screen">
+    <div className="app-shell chat-screen flex flex-col min-h-screen">
       <header className="px-4 pt-5 pb-3 border-b border-border sticky top-0 bg-ink/95 backdrop-blur z-10">
         <button onClick={() => navigate('/plans')} className="text-xs text-muted mb-2">
           ← Plans
